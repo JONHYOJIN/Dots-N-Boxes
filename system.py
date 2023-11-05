@@ -9,24 +9,43 @@ from options import PLAYERS, BACKGROUND, RADIUS, LINE_WIDTH, LINE_COLOR, CIRCLE_
 
 class SYSTEM():
     def __init__(self):
+        """
+            [ SYSTEM ]
+            게임 설정, 진행, 점수 계산 등을 수행하는 시스템.
+
+            - score: USER와 MACHINE의 획득 점수 ([USER, MACHINE])
+            - drawn_lines: 그려진 Line들의 집합
+               * Line: [(x1, y1), (x2, y2)]
+                    -> x값이 작은 점이 항상 왼쪽에 위치 (x값이 같을 경우, y값을 기준으로 함; organize_points 함수를 통해 적용)
+            - whole_lines: 전체 Line 집합에서 그려진 Line이 제외된 집합 (초기에는 전체 집합)
+            - whole_points: 전체 점(Point) 좌표의 집합
+            - location: 좌표 Index 집합 (e.g. [0, 1, 2, 3, 4, 5] for 5x5 Board)
+            - squares: 점령된 Square의 집합 (점수 계산에 사용되며, 없어도 점수 계산은 오류 없이 작동함)
+               * Square: [Line, Line, Line, Line] (Left, Up, Down, Right) 순
+            - turn: 선을 그어야 하는 Player
+
+            - location / offset: Line, Circle 등을 Canvas에 그리기 위한 "Canvas 상 좌표 값" 계산을 위해 사용
+            - board_size: Board 판의 크기 (각 축이 갖는 상자의 수; 초기값은 0)
+            - machine: MACHINE 객체 (USER는 별도의 객체를 사용하지 않음)
+
+            - cancel_changeturn: cancel(되돌리기) 시에 Turn을 바꿔야 하는지에 대한 여부
+        
+        """
         # Initialization
         self.score = [0, 0] # USER, MACHINE
-        self.drawn_lines = []
-        self.whole_lines = []
+        self.drawn_lines = [] # Drawn Lines
+        self.whole_lines = [] # Not Drawn Lines
         self.whole_points = []
         self.location = []
         self.squares = []
+        self.turn = None
 
         self.interval = None
         self.offset = None
-
-        # self.user = USER()
-        self.machine = MACHINE()
-        # self.referee = REFEREE()
-        self.closed_square = 0
         self.board_size = 0
+        self.machine = MACHINE()
 
-        self.turn = None
+        self.cancel_changeturn = True
 
         # GUI
         self.root = Tk()
@@ -37,8 +56,8 @@ class SYSTEM():
         self.root.geometry(PROGRAM_SIZE)
         self.root.resizable(True, True)
 
-
         """
+            [ ComboBox Style (Line 58~68) ]
             Reference: https://stackoverflow.com/questions/27912250/how-to-set-the-background-color-of-a-ttk-combobox
         """
         self.combostyle = ttk.Style()
@@ -101,8 +120,13 @@ class SYSTEM():
         self.label_machinescore2 = Label(self.root, text=self.score[1], background=BACKGROUND)
         self.label_machinescore2.place(x=score_x+70, y=score_y+55)
 
+        # Cancel
+        cancel_x, cancel_y = 10, 200
+        self.button_cancel = Button(self.root, text="Cancel", width=10, fg="grey20", highlightbackground=BACKGROUND, command=self.cancel)
+        self.button_cancel.place(x=cancel_x, y=cancel_y)
+
         # User
-        user_x, user_y = 10, 220
+        user_x, user_y = 10, 250
         self.label_user = Label(self.root, text="[ USER ]", background=BACKGROUND, fg=USER_COLOR)
         self.label_user.place(x=user_x, y=user_y)
 
@@ -120,24 +144,24 @@ class SYSTEM():
         self.end_y = Entry(self.root, textvariable=IntVar(), width=3, highlightbackground=BACKGROUND)
         self.end_y.place(x=user_x+80, y=user_y+55)
 
-        self.label_usergo = Button(self.root, text="Go!", width=10, fg="grey20", highlightbackground=BACKGROUND, command=self.user_go)
-        self.label_usergo.place(x=user_x, y=user_y+80)
+        self.button_usergo = Button(self.root, text="Go!", width=10, fg="grey20", highlightbackground=BACKGROUND, command=self.user_go)
+        self.button_usergo.place(x=user_x, y=user_y+80)
 
         # Machine
-        machine_x, machine_y = 10, 350
+        machine_x, machine_y = 10, 380
         self.label_machine = Label(self.root, text="[ MACHINE ]", background=BACKGROUND, fg=MACHINE_COLOR)
         self.label_machine.place(x=machine_x, y=machine_y)
 
-        self.label_machinego = Button(self.root, text="Go!", width=10, fg="grey20", highlightbackground=BACKGROUND, command=self.machine_go)
-        self.label_machinego.place(x=machine_x, y=machine_y+25)
+        self.button_machinego = Button(self.root, text="Go!", width=10, fg="grey20", highlightbackground=BACKGROUND, command=self.machine_go)
+        self.button_machinego.place(x=machine_x, y=machine_y+25)
 
         # Warning
-        warning_x, warning_y = 10, 405
+        warning_x, warning_y = 10, 435
         self.label_warning = Label(self.root, text="", background=BACKGROUND)
         self.label_warning.place(x=warning_x, y=warning_y)
 
         # Result
-        result_x, result_y = 10, 435
+        result_x, result_y = 10, 485
         self.label_result = Label(self.root, text="The game is ongoing!!", background=BACKGROUND)
         self.label_result.place(x=result_x, y=result_y)
 
@@ -145,6 +169,9 @@ class SYSTEM():
     
     # Canvas(Board)-related Functions
     def set_new_board(self):
+        """
+            초기 Board 설정
+        """
         size = self.combobox_board.get()
 
         # Board Size
@@ -153,8 +180,12 @@ class SYSTEM():
         # Initialization
         self.score = [0, 0]
         self.drawn_lines = []
-        self.whole_points = []
         self.whole_lines = []
+        self.whole_points = []
+        self.location = []
+        self.squares = []
+        self.turn = None
+        self.cancel_changeturn = True
         self.board.delete(ALL)
 
         self.initialize_turn()
@@ -172,7 +203,6 @@ class SYSTEM():
                 self.whole_points.append((idx_x, idx_y))
         
         self.whole_lines = self.find_whole_lines()
-        
 
     def circle(self, cx, cy, color):
         self.board.create_oval(cx-RADIUS, cy-RADIUS, cx+RADIUS, cy+RADIUS, fill=color, width=CIRCLE_WIDTH)
@@ -180,17 +210,17 @@ class SYSTEM():
     def line(self, start, end, color):
         self.board.create_line(start[0], start[1], end[0], end[1], fill=color, width=LINE_WIDTH)
     
-    def occupy_square(self, square):
+    def occupy_square(self, square, color=USER_COLOR):
         upper_left = square[0][0]
         lower_right = square[-1][-1]
         if self.turn == "USER":
             self.board.create_rectangle(self.offset+self.interval*(upper_left[0]+1), self.offset+self.interval*(upper_left[1]+1), \
                                         self.offset+self.interval*(lower_right[0]+1), self.offset+self.interval*(lower_right[1]+1), \
-                                        fill=USER_COLOR)
+                                        fill=color, width=0)
         elif self.turn == "MACHINE":
             self.board.create_rectangle(self.offset+self.interval*(upper_left[0]+1), self.offset+self.interval*(upper_left[1]+1), \
                                         self.offset+self.interval*(lower_right[0]+1), self.offset+self.interval*(lower_right[1]+1), \
-                                        fill=MACHINE_COLOR)
+                                        fill=color, width=0)
     
     def find_whole_lines(self):
         return [[a, b] for (a, b) in list(combinations(self.whole_points, 2)) if (a[0]-b[0])**2 + (a[1]-b[1])**2 == 1]
@@ -213,8 +243,11 @@ class SYSTEM():
 
             self.whole_lines.remove(line)
 
-            if not self.check_square(line):
-                self.change_turn() # 점수 획득이 없을 시
+            if not self.check_square(line): # 점수 획득이 없을 시
+                self.cancel_changeturn = True
+                self.change_turn() 
+            else:
+                self.cancel_changeturn = False
 
             self.label_userscore2.config(text=self.score[0])
 
@@ -222,7 +255,6 @@ class SYSTEM():
                 f = lambda i: self.score[i]
                 winner = PLAYERS[max(range(len(self.score)), key=f)]
                 self.label_result.config(text=f"The Winner is {winner}!!")
-
 
         else:
             self.label_warning.config(text="Check the turn or the input!")
@@ -247,15 +279,18 @@ class SYSTEM():
 
             self.whole_lines.remove(line)
 
-            if not self.check_square(line):
-                self.change_turn() # 점수 획득이 없을 시
+            if not self.check_square(line): # 점수 획득이 없을 시
+                self.cancel_changeturn = True
+                self.change_turn() 
+            else:
+                self.cancel_changeturn = False
 
             self.label_machinescore2.config(text=self.score[1])
 
             if not self.whole_lines or max(self.score)>=((self.board_size**2 // 2) + 1):
                 f = lambda i: self.score[i]
                 winner = PLAYERS[max(range(len(self.score)), key=f)]
-                self.label_result.config(text=f"The Winner is {winner}!!")
+                self.label_result.config(text=f"The Winner is the {winner}!!")
 
         else:
             self.label_warning.config(text="Check the turn \nor the machine error!")
@@ -279,7 +314,7 @@ class SYSTEM():
         # Must be own turn
         condition5 = (self.turn==turn)
 
-        if  condition1 and condition2 and condition3 and condition4 and condition5:
+        if condition1 and condition2 and condition3 and condition4 and condition5:
             return True
         else:
             return False    
@@ -293,6 +328,29 @@ class SYSTEM():
             else:
                 return end_x, end_y, start_x, start_y
     
+    def cancel(self):
+        if self.drawn_lines:
+            recent = self.drawn_lines[-1]
+            self.whole_lines.append(recent)
+            self.drawn_lines.remove(recent)
+
+            start_x, start_y, end_x, end_y = recent[0][0], recent[0][1], recent[1][0], recent[1][1]
+            draw = [(self.location[start_x], self.location[start_y]), (self.location[end_x], self.location[end_y])]
+            self.line(draw[0], draw[1], color="white")
+
+            if self.cancel_changeturn:
+                self.change_turn()
+            else:
+                if self.squares:
+                    recent_square = self.squares[-1]
+                    self.occupy_square(recent_square, color="white")
+                    if self.turn=="USER":
+                        self.score[0] -= 1
+                        self.label_userscore2.config(text=self.score[0])
+                    elif self.turn=="MACHINE":
+                        self.score[1] -= 1
+                        self.label_machinescore2.config(text=self.score[1])
+
     # Score Checking Functions
     def check_square(self, line):
         get_score = False

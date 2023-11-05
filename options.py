@@ -9,12 +9,11 @@ PROGRAM_SIZE = "800x600"
 USER_COLOR = "indian red"
 MACHINE_COLOR = "steel blue"
 
-
 # Canvas
 CANVAS_SIZE = 500
 
 # Lines
-LINE_WIDTH = 3
+LINE_WIDTH = 5
 LINE_COLOR = "SteelBlue4"
 DRAWN_LINE_COLOR = "blue"
 
