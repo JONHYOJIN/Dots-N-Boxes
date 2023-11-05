@@ -91,7 +91,7 @@ class SYSTEM():
         self.combobox_firstturn.place(x=248, y=12)
 
         # Start Game
-        self.button_startgame = Button(self.root, text="Start Game!", width=6, fg="grey20", highlightbackground=BACKGROUND, command=self.set_new_board)
+        self.button_startgame = Button(self.root, text="Start Game!", width=10, fg="grey20", highlightbackground=BACKGROUND, command=self.set_new_board)
         self.button_startgame.place(x=360, y=8)
 
         # Canvas
@@ -130,25 +130,30 @@ class SYSTEM():
         self.label_user = Label(self.root, text="[ USER ]", background=BACKGROUND, fg=USER_COLOR)
         self.label_user.place(x=user_x, y=user_y)
 
+        self.label_x = Label(self.root, text="X", background=BACKGROUND)
+        self.label_x.place(x=user_x+60, y=user_y+25)
+        self.label_y = Label(self.root, text="Y", background=BACKGROUND)
+        self.label_y.place(x=user_x+100, y=user_y+25)
+
         self.label_userstart = Label(self.root, text="From:", background=BACKGROUND)
-        self.label_userstart.place(x=user_x, y=user_y+25)
+        self.label_userstart.place(x=user_x, y=user_y+50)
         self.start_x = Entry(self.root, textvariable=IntVar(), width=3, highlightbackground=BACKGROUND)
-        self.start_x.place(x=user_x+40, y=user_y+25)
+        self.start_x.place(x=user_x+40, y=user_y+50)
         self.start_y = Entry(self.root, textvariable=IntVar(), width=3, highlightbackground=BACKGROUND)
-        self.start_y.place(x=user_x+80, y=user_y+25)
+        self.start_y.place(x=user_x+80, y=user_y+50)
 
         self.label_userend = Label(self.root, text="    To:", background=BACKGROUND)
-        self.label_userend.place(x=user_x, y=user_y+55)
+        self.label_userend.place(x=user_x, y=user_y+80)
         self.end_x = Entry(self.root, textvariable=IntVar(), width=3, highlightbackground=BACKGROUND)
-        self.end_x.place(x=user_x+40, y=user_y+55)
+        self.end_x.place(x=user_x+40, y=user_y+80)
         self.end_y = Entry(self.root, textvariable=IntVar(), width=3, highlightbackground=BACKGROUND)
-        self.end_y.place(x=user_x+80, y=user_y+55)
+        self.end_y.place(x=user_x+80, y=user_y+80)
 
         self.button_usergo = Button(self.root, text="Go!", width=10, fg="grey20", highlightbackground=BACKGROUND, command=self.user_go)
-        self.button_usergo.place(x=user_x, y=user_y+80)
+        self.button_usergo.place(x=user_x, y=user_y+105)
 
         # Machine
-        machine_x, machine_y = 10, 380
+        machine_x, machine_y = 10, 405
         self.label_machine = Label(self.root, text="[ MACHINE ]", background=BACKGROUND, fg=MACHINE_COLOR)
         self.label_machine.place(x=machine_x, y=machine_y)
 
@@ -156,12 +161,12 @@ class SYSTEM():
         self.button_machinego.place(x=machine_x, y=machine_y+25)
 
         # Warning
-        warning_x, warning_y = 10, 435
+        warning_x, warning_y = 10, 460
         self.label_warning = Label(self.root, text="", background=BACKGROUND)
         self.label_warning.place(x=warning_x, y=warning_y)
 
         # Result
-        result_x, result_y = 10, 485
+        result_x, result_y = 10, 510
         self.label_result = Label(self.root, text="The game is ongoing!!", background=BACKGROUND)
         self.label_result.place(x=result_x, y=result_y)
 
