@@ -4,8 +4,7 @@ from itertools import combinations
 
 from machine import MACHINE
 from options import PLAYERS, BACKGROUND, RADIUS, LINE_WIDTH, LINE_COLOR, CIRCLE_WIDTH, CIRCLE_COLOR, \
-                    USER_COLOR, MACHINE_COLOR, \
-                    PROGRAM_SIZE, CANVAS_SIZE
+                    USER_COLOR, MACHINE_COLOR, PROGRAM_SIZE, CANVAS_SIZE
 
 class SYSTEM():
     def __init__(self):
@@ -20,7 +19,7 @@ class SYSTEM():
             - whole_lines: 전체 Line 집합에서 그려진 Line이 제외된 집합 (초기에는 전체 집합)
             - whole_points: 전체 점(Point) 좌표의 집합
             - location: 좌표 Index 집합 (e.g. [0, 1, 2, 3, 4, 5] for 5x5 Board)
-            - squares: 점령된 Square의 집합 (점수 계산에 사용되며, 없어도 점수 계산은 오류 없이 작동함)
+            - squares: 점령된 Square의 집합 (점수 계산 및 취소에 사용 됨)
                * Square: [Line, Line, Line, Line] (Left, Up, Down, Right) 순
             - turn: 선을 그어야 하는 Player
 
@@ -213,17 +212,17 @@ class SYSTEM():
         self.board.create_oval(cx-RADIUS, cy-RADIUS, cx+RADIUS, cy+RADIUS, fill=color, width=CIRCLE_WIDTH)
     
     def line(self, start, end, color):
-        self.board.create_line(start[0], start[1], end[0], end[1], fill=color, width=LINE_WIDTH)
+        self.last_line = self.board.create_line(start[0], start[1], end[0], end[1], fill=color, width=LINE_WIDTH)
     
     def occupy_square(self, square, color=USER_COLOR):
         upper_left = square[0][0]
         lower_right = square[-1][-1]
         if self.turn == "USER":
-            self.board.create_rectangle(self.offset+self.interval*(upper_left[0]+1), self.offset+self.interval*(upper_left[1]+1), \
+            self.last_square = self.board.create_rectangle(self.offset+self.interval*(upper_left[0]+1), self.offset+self.interval*(upper_left[1]+1), \
                                         self.offset+self.interval*(lower_right[0]+1), self.offset+self.interval*(lower_right[1]+1), \
                                         fill=color, width=0)
         elif self.turn == "MACHINE":
-            self.board.create_rectangle(self.offset+self.interval*(upper_left[0]+1), self.offset+self.interval*(upper_left[1]+1), \
+            self.last_square = self.board.create_rectangle(self.offset+self.interval*(upper_left[0]+1), self.offset+self.interval*(upper_left[1]+1), \
                                         self.offset+self.interval*(lower_right[0]+1), self.offset+self.interval*(lower_right[1]+1), \
                                         fill=color, width=0)
     
@@ -338,17 +337,15 @@ class SYSTEM():
             recent = self.drawn_lines[-1]
             self.whole_lines.append(recent)
             self.drawn_lines.remove(recent)
-
-            start_x, start_y, end_x, end_y = recent[0][0], recent[0][1], recent[1][0], recent[1][1]
-            draw = [(self.location[start_x], self.location[start_y]), (self.location[end_x], self.location[end_y])]
-            self.line(draw[0], draw[1], color="white")
+            self.board.delete(self.last_line)
 
             if self.cancel_changeturn:
                 self.change_turn()
             else:
                 if self.squares:
                     recent_square = self.squares[-1]
-                    self.occupy_square(recent_square, color="white")
+                    self.squares.remove(recent_square)
+                    self.board.delete(self.last_square)
                     if self.turn=="USER":
                         self.score[0] -= 1
                         self.label_userscore2.config(text=self.score[0])
