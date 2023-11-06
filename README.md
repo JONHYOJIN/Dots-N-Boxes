@@ -25,7 +25,7 @@ But note that you have to return the final output via **find_best_selection** fu
 pip install tk
 
 # Clone the repository
-## How to run?
+git clone https://github.com/JONHYOJIN/Dots-N-Boxes.git
 ```
 
 - **Play the GUI**
