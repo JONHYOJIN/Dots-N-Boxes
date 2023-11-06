@@ -359,6 +359,8 @@ class SYSTEM():
 
         point1 = line[0]
         point2 = line[1]
+
+        color = USER_COLOR if self.turn=="USER" else MACHINE_COLOR
         
         is_vertical = (point1[0]==point2[0])
         is_horizontal = (point1[1]==point2[1])
@@ -372,7 +374,7 @@ class SYSTEM():
                 if all([line in self.drawn_lines for line in right_square]) and (right_square not in self.squares):
                     self.squares.append(right_square)
                     self.score[PLAYERS.index(self.turn)]+=1
-                    self.occupy_square(right_square)
+                    self.occupy_square(right_square, color=color)
                     get_score = True
                 
 
@@ -385,7 +387,7 @@ class SYSTEM():
                 if all([line in self.drawn_lines for line in left_square]) and (left_square not in self.squares):
                     self.squares.append(left_square)
                     self.score[PLAYERS.index(self.turn)]+=1
-                    self.occupy_square(left_square)
+                    self.occupy_square(left_square, color=color)
                     get_score = True
                 
             else:
@@ -396,7 +398,7 @@ class SYSTEM():
                 if all([line in self.drawn_lines for line in right_square]) and (right_square not in self.squares):
                     self.squares.append(right_square)
                     self.score[PLAYERS.index(self.turn)]+=1
-                    self.occupy_square(right_square)
+                    self.occupy_square(right_square, color=color)
                     get_score = True
 
                 left_square = [[(point1[0]-1,point1[1]), (point1[0]-1,point1[1]+1)], \
@@ -406,7 +408,7 @@ class SYSTEM():
                 if all([line in self.drawn_lines for line in left_square]) and (left_square not in self.squares):
                     self.squares.append(left_square)
                     self.score[PLAYERS.index(self.turn)]+=1
-                    self.occupy_square(left_square)
+                    self.occupy_square(left_square, color=color)
                     get_score = True
         
         elif is_horizontal:
@@ -418,7 +420,7 @@ class SYSTEM():
                 if all([line in self.drawn_lines for line in lower_square]) and (lower_square not in self.squares):
                     self.squares.append(lower_square)
                     self.score[PLAYERS.index(self.turn)]+=1
-                    self.occupy_square(lower_square)
+                    self.occupy_square(lower_square, color=color)
                     get_score = True
 
             elif (point1[1]==self.board_size): # Lower Border
@@ -430,7 +432,7 @@ class SYSTEM():
                 if all([line in self.drawn_lines for line in upper_square]) and (upper_square not in self.squares):
                     self.squares.append(upper_square)
                     self.score[PLAYERS.index(self.turn)]+=1
-                    self.occupy_square(upper_square)
+                    self.occupy_square(upper_square, color=color)
                     get_score = True
                 
             else:
@@ -441,7 +443,7 @@ class SYSTEM():
                 if all([line in self.drawn_lines for line in lower_square]) and (lower_square not in self.squares):
                     self.squares.append(lower_square)
                     self.score[PLAYERS.index(self.turn)]+=1
-                    self.occupy_square(lower_square)
+                    self.occupy_square(lower_square, color=color)
                     get_score = True
 
                 upper_square = [[(point1[0],point1[1]-1), point1], \
@@ -452,7 +454,7 @@ class SYSTEM():
                 if all([line in self.drawn_lines for line in upper_square]) and (upper_square not in self.squares):
                     self.squares.append(upper_square)
                     self.score[PLAYERS.index(self.turn)]+=1
-                    self.occupy_square(upper_square)
+                    self.occupy_square(upper_square, color=color)
                     get_score = True
                 
         return get_score
